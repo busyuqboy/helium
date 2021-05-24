@@ -1,0 +1,37 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: "Setup Node 14"
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14"
+
+      - name: "Install dependencies"
+        run: npm ci
+
+      - name: "Validate"
+        run: npm run validate --if-present
+
+      - name: "Build"
+        run: npm run build --if-present
+
+      - name: "Prune"
+        run: npm prune --production
+
+      - name: "Deploy to Azure"
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: "towbook-flatbed"
+          slot-name: "production"
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_58f97d1310e84aa18bdeaec7ee24d0d8 }}
+          package: .
